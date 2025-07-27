@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Piano Instrument</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        .container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .startup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        .startup h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ff4;
+            text-shadow: 0 0 20px #ff4;
+        }
+        
+        .startup p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+        
+        .activate-btn {
+            background: linear-gradient(45deg, #ff4400, #ffaa00);
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5em;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+        
+        .activate-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.5);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #webcam {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            border: 2px solid #ff4;
+            border-radius: 10px;
+            z-index: 100;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ff4;
+            width: 200px;
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        .control-group label {
+            display: block;
+            color: #ff4;
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+        
+        .control-group input[type="range"] {
+            width: 140px;
+        }
+        
+        .strings-display {
+            position: absolute;
+            left: 0;
+            top: 200px;
+            bottom: 120px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            border-right: 2px solid #ff4;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .string-control {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: rgba(20, 20, 20, 0.8);
+        }
+        
+        .string-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .string-name {
+            color: #ff4;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .current-note {
+            color: #4ff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .string-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .note-slider {
+            width: 120px;
+            margin: 0 10px;
+        }
+        
+        .note-buttons {
+            display: flex;
+            gap: 3px;
+        }
+        
+        .note-btn {
+            background: #333;
+            border: 1px solid #666;
+            color: #fff;
+            padding: 2px 6px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .note-btn:hover {
+            background: #555;
+        }
+        
+        .note-btn.active {
+            background: #ff4;
+            color: #000;
+        }
+        
+        .motion-zones {
+            position: absolute;
+            right: 0;
+            top: 200px;
+            bottom: 120px;
+            width: 100px;
+            background: rgba(50, 50, 0, 0.3);
+            border-left: 2px solid #ff4;
+        }
+        
+        .motion-zone {
+            height: 10%;
+            border-bottom: 1px solid #444;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .motion-zone:hover {
+            background: rgba(255, 68, 0, 0.2);
+        }
+        
+        .motion-zone.active {
+            background: rgba(255, 68, 0, 0.5);
+        }
+        
+        .zone-label {
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #ff4;
+        }
+        
+        .motion-indicator {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #444;
+        }
+        
+        .motion-indicator.active {
+            background: #4f4;
+            box-shadow: 0 0 5px #4f4;
+        }
+        
+        .piano-display {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #ff4;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .piano-keys {
+            display: flex;
+            height: 60px;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .piano-key {
+            flex: 1;
+            margin: 0 1px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 3px 3px 0 0;
+            position: relative;
+            transition: all 0.1s;
+        }
+        
+        .piano-key.active {
+            background: #ff4;
+            box-shadow: 0 0 10px #ff4;
+            transform: scaleY(1.2);
+        }
+        
+        .key-label {
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #ccc;
+        }
+        
+        .key-label.active {
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            position: absolute;
+            top: 50%;
+            left: 350px;
+            right: 120px;
+            transform: translateY(-50%);
+            text-align: center;
+            color: #ff4;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #ff4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Startup Screen -->
+        <div class="startup" id="startup">
+            <h1>STRING PIANO INSTRUMENT</h1>
+            <p>Control musical notes with movement in screen zones</p>
+            <p>Each string maps to a different note (C2-C7). Move in right zones to control pitch!</p>
+            <button class="activate-btn" onclick="activateInstrument()">🎹 ACTIVATE PIANO 🎵</button>
+        </div>
+        
+        <!-- Main Interface -->
+        <div class="hidden" id="interface">
+            <video id="webcam" autoplay muted></video>
+            
+            <!-- Controls -->
+            <div class="controls">
+                <h3 style="color: #ff4; margin-top: 0; font-size: 14px;">PIANO CONTROLS</h3>
+                
+                <div class="control-group">
+                    <label>Master Volume:</label>
+                    <input type="range" id="masterVolume" min="0" max="1" step="0.1" value="0.3">
+                    <span id="masterVolumeValue">0.3</span>
+                </div>
+                
+                <div class="control-group">
+                    <label>Motion Sensitivity:</label>
+                    <input type="range" id="motionSensitivity" min="0.5" max="3" step="0.1" value="1.5">
+                    <span id="motionSensitivityValue">1.5</span>
+                </div>
+                
+                <div class="control-group">
+                    <label>Note Smoothing:</label>
+                    <input type="range" id="noteSmoothing" min="0.1" max="0.9" step="0.1" value="0.4">
+                    <span id="noteSmoothingValue">0.4</span>
+                </div>
+                
+                <button onclick="toggleInstrument()" id="toggleBtn" style="background: #ff4444; border: none; color: white; padding: 8px; border-radius: 5px; margin-top: 10px; width: 100%;">PAUSE</button>
+            </div>
+            
+            <!-- String Controls -->
+            <div class="strings-display">
+                <h3 style="color: #ff4; margin-top: 0; font-size: 14px;">STRINGS (10)</h3>
+                <div id="stringControls">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Motion Detection Zones -->
+            <div class="motion-zones" id="motionZones">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <!-- Piano Display -->
+            <div class="piano-display">
+                <div style="text-align: center; color: #ff4; font-size: 12px; margin-bottom: 5px;">ACTIVE NOTES</div>
+                <div class="piano-keys" id="pianoKeys">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="instructions" id="instructions">
+                <div>🎹 <strong>STRING PIANO CONTROL</strong> 🎹</div>
+                <div style="margin: 15px 0; font-size: 14px;">
+                    • <strong>Right side zones</strong>: Move up/down to change string pitch<br>
+                    • <strong>Left controls</strong>: Fine-tune each string manually<br>
+                    • <strong>Visual feedback</strong>: See active notes on piano display
+                </div>
+                <div style="font-size: 12px; color: #ccc;">
+                    Point camera at different areas and watch the strings respond!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // STRING PIANO INSTRUMENT
+        // ============================================================
+        
+        class StringPiano {
+            constructor() {
+                // 10 strings, each with its own note
+                this.stringCount = 10;
+                this.strings = [];
+                
+                // Note system: C2 to C7 (5 octaves = 60 semitones)
+                this.baseFreq = 65.41; // C2
+                this.maxSemitones = 60; // 5 octaves
+                
+                // Audio setup
+                this.audioContext = null;
+                this.oscillators = [];
+                this.gainNodes = [];
+                this.masterGain = null;
+                
+                // Motion detection
+                this.motionZones = [];
+                this.zoneMotion = new Array(this.stringCount).fill(0);
+                
+                // Visual elements
+                this.stringControls = [];
+                this.pianoKeys = [];
+                this.motionZoneElements = [];
+                
+                // Detection
+                this.previousFrame = null;
+                this.motionSensitivity = 1.5;
+                this.noteSmoothing = 0.4;
+                
+                this.initializeStrings();
+            }
+            
+            initializeStrings() {
+                for (let i = 0; i < this.stringCount; i++) {
+                    this.strings.push({
+                        id: i,
+                        name: `String ${i + 1}`,
+                        currentSemitone: Math.floor((i / this.stringCount) * this.maxSemitones), // Spread across range
+                        targetSemitone: Math.floor((i / this.stringCount) * this.maxSemitones),
+                        frequency: 0,
+                        volume: 0,
+                        isActive: false
+                    });
+                }
+                this.updateAllFrequencies();
+            }
+            
+            async initializeAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Master gain
+                    this.masterGain = this.audioContext.createGain();
+                    this.masterGain.connect(this.audioContext.destination);
+                    this.masterGain.gain.value = 0.3;
+                    
+                    // Create oscillator and gain for each string
+                    for (let i = 0; i < this.stringCount; i++) {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = this.strings[i].frequency;
+                        gainNode.gain.value = 0;
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.masterGain);
+                        oscillator.start();
+                        
+                        this.oscillators.push(oscillator);
+                        this.gainNodes.push(gainNode);
+                    }
+                    
+                    console.log('🎹 Piano audio initialized');
+                    return true;
+                } catch (error) {
+                    console.error('Audio initialization failed:', error);
+                    return false;
+                }
+            }
+            
+            semitoneToFrequency(semitone) {
+                return this.baseFreq * Math.pow(2, semitone / 12);
+            }
+            
+            semitoneToNoteName(semitone) {
+                const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                const octave = Math.floor(semitone / 12) + 2; // Start from C2
+                const note = noteNames[semitone % 12];
+                return `${note}${octave}`;
+            }
+            
+            updateAllFrequencies() {
+                for (let i = 0; i < this.strings.length; i++) {
+                    this.strings[i].frequency = this.semitoneToFrequency(this.strings[i].currentSemitone);
+                }
+            }
+            
+            setStringSemitone(stringIndex, semitone, smooth = true) {
+                if (stringIndex < 0 || stringIndex >= this.strings.length) return;
+                
+                semitone = Math.max(0, Math.min(this.maxSemitones - 1, Math.round(semitone)));
+                
+                if (smooth) {
+                    this.strings[stringIndex].targetSemitone = semitone;
+                } else {
+                    this.strings[stringIndex].currentSemitone = semitone;
+                    this.strings[stringIndex].targetSemitone = semitone;
+                    this.strings[stringIndex].frequency = this.semitoneToFrequency(semitone);
+                }
+            }
+            
+            analyzeMotionZones(imageData) {
+                if (!this.previousFrame) {
+                    this.previousFrame = new Uint8ClampedArray(imageData.data);
+                    return;
+                }
+                
+                const data = imageData.data;
+                const width = imageData.width;
+                const height = imageData.height;
+                
+                // Reset zone motion
+                this.zoneMotion.fill(0);
+                
+                // Divide frame into horizontal zones (one per string)
+                const zoneHeight = height / this.stringCount;
+                
+                for (let zone = 0; zone < this.stringCount; zone++) {
+                    let zoneMotion = 0;
+                    let pixelCount = 0;
+                    
+                    const startY = Math.floor(zone * zoneHeight);
+                    const endY = Math.floor((zone + 1) * zoneHeight);
+                    
+                    // Focus on right side of frame for motion detection
+                    const startX = Math.floor(width * 0.7); // Right 30%
+                    
+                    for (let y = startY; y < endY; y++) {
+                        for (let x = startX; x < width; x++) {
+                            const i = (y * width + x) * 4;
+                            
+                            const currentGray = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                            const previousGray = (this.previousFrame[i] + this.previousFrame[i + 1] + this.previousFrame[i + 2]) / 3;
+                            
+                            zoneMotion += Math.abs(currentGray - previousGray);
+                            pixelCount++;
+                        }
+                    }
+                    
+                    if (pixelCount > 0) {
+                        this.zoneMotion[zone] = (zoneMotion / pixelCount) / 255;
+                    }
+                }
+                
+                this.previousFrame = new Uint8ClampedArray(data);
+                
+                // Update string pitches based on motion
+                this.updateStringPitchesFromMotion();
+            }
+            
+            updateStringPitchesFromMotion() {
+                for (let i = 0; i < this.stringCount; i++) {
+                    const motion = this.zoneMotion[i] * this.motionSensitivity;
+                    
+                    if (motion > 0.02) { // Threshold for significant motion
+                        // Map motion intensity to pitch change
+                        // Higher motion = higher pitch
+                        const pitchInfluence = motion * 20; // Scale factor
+                        const basePitch = Math.floor((i / this.stringCount) * this.maxSemitones);
+                        const newSemitone = Math.floor(basePitch + pitchInfluence);
+                        
+                        this.setStringSemitone(i, newSemitone, true);
+                        this.strings[i].volume = Math.min(motion * 5, 1.0); // Volume based on motion
+                        this.strings[i].isActive = true;
+                    } else {
+                        this.strings[i].volume *= 0.95; // Fade out
+                        if (this.strings[i].volume < 0.01) {
+                            this.strings[i].isActive = false;
+                            this.strings[i].volume = 0;
+                        }
+                    }
+                }
+            }
+            
+            updateAudio() {
+                if (!this.audioContext) return;
+                
+                for (let i = 0; i < this.strings.length; i++) {
+                    const string = this.strings[i];
+                    
+                    // Smooth semitone transitions
+                    const smoothingRate = this.noteSmoothing;
+                    string.currentSemitone += (string.targetSemitone - string.currentSemitone) * (1 - smoothingRate);
+                    string.frequency = this.semitoneToFrequency(string.currentSemitone);
+                    
+                    // Update oscillator frequency
+                    if (this.oscillators[i]) {
+                        this.oscillators[i].frequency.setTargetAtTime(
+                            string.frequency,
+                            this.audioContext.currentTime,
+                            0.1
+                        );
+                    }
+                    
+                    // Update volume
+                    if (this.gainNodes[i]) {
+                        this.gainNodes[i].gain.setTargetAtTime(
+                            string.volume * 0.1, // Keep volumes low
+                            this.audioContext.currentTime,
+                            0.05
+                        );
+                    }
+                }
+            }
+            
+            setMasterVolume(volume) {
+                if (this.masterGain) {
+                    this.masterGain.gain.setTargetAtTime(volume, this.audioContext.currentTime, 0.1);
+                }
+            }
+            
+            setMotionSensitivity(sensitivity) {
+                this.motionSensitivity = sensitivity;
+            }
+            
+            setNoteSmoothing(smoothing) {
+                this.noteSmoothing = smoothing;
+            }
+        }
+        
+        class StringPianoUI {
+            constructor(piano) {
+                this.piano = piano;
+                this.video = null;
+                this.hiddenCanvas = null;
+                this.hiddenCtx = null;
+                this.isActive = false;
+                this.animationId = null;
+                
+                this.setupUI();
+            }
+            
+            async initialize() {
+                try {
+                    // Get video stream
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 320, height: 240 } // Smaller for performance
+                    });
+                    
+                    this.video = document.getElementById('webcam');
+                    this.video.srcObject = stream;
+                    
+                    // Create hidden canvas for analysis
+                    this.hiddenCanvas = document.createElement('canvas');
+                    this.hiddenCanvas.width = 80;  // Very small for motion detection
+                    this.hiddenCanvas.height = 60;
+                    this.hiddenCtx = this.hiddenCanvas.getContext('2d');
+                    
+                    // Initialize piano audio
+                    await this.piano.initializeAudio();
+                    
+                    console.log('🎹 String Piano UI initialized');
+                    return true;
+                } catch (error) {
+                    console.error('UI initialization failed:', error);
+                    return false;
+                }
+            }
+            
+            setupUI() {
+                this.createStringControls();
+                this.createMotionZones();
+                this.createPianoKeys();
+                this.setupControlHandlers();
+            }
+            
+            createStringControls() {
+                const container = document.getElementById('stringControls');
+                container.innerHTML = '';
+                
+                for (let i = 0; i < this.piano.stringCount; i++) {
+                    const string = this.piano.strings[i];
+                    
+                    const stringDiv = document.createElement('div');
+                    stringDiv.className = 'string-control';
+                    
+                    stringDiv.innerHTML = `
+                        <div class="string-header">
+                            <span class="string-name">${string.name}</span>
+                            <span class="current-note" id="note-${i}">C2</span>
+                        </div>
+                        <div class="string-controls">
+                            <div class="note-buttons">
+                                <button class="note-btn" onclick="adjustString(${i}, -1)">-</button>
+                                <button class="note-btn" onclick="adjustString(${i}, 1)">+</button>
+                            </div>
+                            <input type="range" class="note-slider" id="slider-${i}" 
+                                   min="0" max="${this.piano.maxSemitones - 1}" 
+                                   value="${string.currentSemitone}" 
+                                   oninput="setStringNote(${i}, this.value)">
+                        </div>
+                    `;
+                    
+                    container.appendChild(stringDiv);
+                }
+            }
+            
+            createMotionZones() {
+                const container = document.getElementById('motionZones');
+                container.innerHTML = '';
+                
+                for (let i = 0; i < this.piano.stringCount; i++) {
+                    const zone = document.createElement('div');
+                    zone.className = 'motion-zone';
+                    zone.innerHTML = `
+                        <span class="zone-label">S${i + 1}</span>
+                        <div class="motion-indicator" id="motion-${i}"></div>
+                    `;
+                    container.appendChild(zone);
+                }
+            }
+            
+            createPianoKeys() {
+                const container = document.getElementById('pianoKeys');
+                container.innerHTML = '';
+                
+                // Create visual keys for the current note range
+                for (let i = 0; i < 24; i++) { // 2 octaves of visual keys
+                    const key = document.createElement('div');
+                    key.className = 'piano-key';
+                    key.id = `key-${i}`;
+                    
+                    const noteName = this.piano.semitoneToNoteName(i);
+                    key.innerHTML = `<span class="key-label">${noteName}</span>`;
+                    
+                    container.appendChild(key);
+                }
+            }
+            
+            setupControlHandlers() {
+                // Master volume
+                const masterVolume = document.getElementById('masterVolume');
+                const masterVolumeValue = document.getElementById('masterVolumeValue');
+                masterVolume.addEventListener('input', (e) => {
+                    masterVolumeValue.textContent = e.target.value;
+                    this.piano.setMasterVolume(parseFloat(e.target.value));
+                });
+                
+                // Motion sensitivity
+                const motionSensitivity = document.getElementById('motionSensitivity');
+                const motionSensitivityValue = document.getElementById('motionSensitivityValue');
+                motionSensitivity.addEventListener('input', (e) => {
+                    motionSensitivityValue.textContent = e.target.value;
+                    this.piano.setMotionSensitivity(parseFloat(e.target.value));
+                });
+                
+                // Note smoothing
+                const noteSmoothing = document.getElementById('noteSmoothing');
+                const noteSmoothingValue = document.getElementById('noteSmoothingValue');
+                noteSmoothing.addEventListener('input', (e) => {
+                    noteSmoothingValue.textContent = e.target.value;
+                    this.piano.setNoteSmoothing(parseFloat(e.target.value));
+                });
+            }
+            
+            start() {
+                this.isActive = true;
+                document.getElementById('instructions').style.display = 'none';
+                this.loop();
+            }
+            
+            stop() {
+                this.isActive = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+            }
+            
+            loop() {
+                if (!this.isActive) return;
+                
+                // Capture and analyze frame
+                if (this.video && this.video.readyState >= 2) {
+                    this.hiddenCtx.drawImage(this.video, 0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
+                    const imageData = this.hiddenCtx.getImageData(0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
+                    
+                    // Analyze motion in zones
+                    this.piano.analyzeMotionZones(imageData);
+                    
+                    // Update audio
+                    this.piano.updateAudio();
+                    
+                    // Update UI
+                    this.updateUI();
+                }
+                
+                this.animationId = requestAnimationFrame(() => this.loop());
+            }
+            
+            updateUI() {
+                // Update string displays
+                for (let i = 0; i < this.piano.stringCount; i++) {
+                    const string = this.piano.strings[i];
+                    
+                    // Update note display
+                    const noteElement = document.getElementById(`note-${i}`);
+                    if (noteElement) {
+                        noteElement.textContent = this.piano.semitoneToNoteName(Math.round(string.currentSemitone));
+                        noteElement.style.color = string.isActive ? '#4f4' : '#4ff';
+                    }
+                    
+                    // Update slider
+                    const slider = document.getElementById(`slider-${i}`);
+                    if (slider) {
+                        slider.value = Math.round(string.currentSemitone);
+                    }
+                    
+                    // Update motion indicator
+                    const motionIndicator = document.getElementById(`motion-${i}`);
+                    if (motionIndicator) {
+                        const isActive = this.piano.zoneMotion[i] > 0.02;
+                        motionIndicator.className = `motion-indicator ${isActive ? 'active' : ''}`;
+                    }
+                }
+                
+                // Update piano keys
+                this.updatePianoKeys();
+            }
+            
+            updatePianoKeys() {
+                // Clear all keys
+                for (let i = 0; i < 24; i++) {
+                    const key = document.getElementById(`key-${i}`);
+                    if (key) {
+                        key.className = 'piano-key';
+                        const label = key.querySelector('.key-label');
+                        if (label) {
+                            label.className = 'key-label';
+                        }
+                    }
+                }
+                
+                // Highlight active string notes
+                for (let i = 0; i < this.piano.stringCount; i++) {
+                    const string = this.piano.strings[i];
+                    if (string.isActive && string.volume > 0.1) {
+                        const semitone = Math.round(string.currentSemitone) % 24; // Map to visual range
+                        const key = document.getElementById(`key-${semitone}`);
+                        if (key) {
+                            key.className = 'piano-key active';
+                            const label = key.querySelector('.key-label');
+                            if (label) {
+                                label.className = 'key-label active';
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ============================================================
+        // GLOBAL FUNCTIONS
+        // ============================================================
+        
+        let piano = null;
+        let pianoUI = null;
+        let isRunning = false;
+        
+        async function activateInstrument() {
+            document.getElementById('startup').classList.add('hidden');
+            document.getElementById('interface').classList.remove('hidden');
+            
+            piano = new StringPiano();
+            pianoUI = new StringPianoUI(piano);
+            
+            const success = await pianoUI.initialize();
+            
+            if (success) {
+                pianoUI.start();
+                isRunning = true;
+                console.log('🎹 String Piano activated!');
+            } else {
+                alert('Failed to initialize piano. Please check camera permissions.');
+            }
+        }
+        
+        function toggleInstrument() {
+            if (!pianoUI) return;
+            
+            const toggleBtn = document.getElementById('toggleBtn');
+            
+            if (isRunning) {
+                pianoUI.stop();
+                toggleBtn.textContent = 'RESUME';
+                toggleBtn.style.background = '#44ff44';
+                isRunning = false;
+            } else {
+                pianoUI.start();
+                toggleBtn.textContent = 'PAUSE';
+                toggleBtn.style.background = '#ff4444';
+                isRunning = true;
+            }
+        }
+        
+        function setStringNote(stringIndex, semitone) {
+            if (piano) {
+                piano.setStringSemitone(stringIndex, parseInt(semitone), false);
+            }
+        }
+        
+        function adjustString(stringIndex, direction) {
+            if (piano) {
+                const currentSemitone = piano.strings[stringIndex].currentSemitone;
+                const newSemitone = currentSemitone + direction;
+                piano.setStringSemitone(stringIndex, newSemitone, false);
+                
+                // Update slider
+                const slider = document.getElementById(`slider-${stringIndex}`);
+                if (slider) {
+                    slider.value = newSemitone;
+                }
+            }
+        }
+        
+        // Initialize on load
+        console.log('🎹 String Piano Instrument ready to activate');
+        console.log('📹 Move in the right zones to control string pitch!');
+    </script>
+</body>
+</html>
